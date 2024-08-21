@@ -1,0 +1,37 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+file_path = r'C:\Users\Harsha\Desktop\INTERN CODSOFT\Titanic-Dataset.xls.xlsx'
+titanic_data = pd.read_excel(file_path)
+titanic_data.drop(columns=['Cabin'], inplace=True)
+titanic_data['Age'].fillna(titanic_data['Age'].median(), inplace=True)
+titanic_data['Embarked'].fillna(titanic_data['Embarked'].mode()[0], inplace=True)
+titanic_data['Sex'] = titanic_data['Sex'].map({'male': 0, 'female': 1})
+titanic_data = pd.get_dummies(titanic_data, columns=['Embarked'], drop_first=True)
+titanic_data.drop(columns=['PassengerId', 'Name', 'Ticket'], inplace=True)
+X = titanic_data.drop(columns=['Survived'])
+y = titanic_data['Survived']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+classification_rep = classification_report(y_test, y_pred)
+confusion_mat = confusion_matrix(y_test, y_pred)
+print(f'Accuracy: {accuracy:.4f}')
+print('Classification Report:')
+print(classification_rep)
+print('Confusion Matrix:')
+print(confusion_mat)
+def predict_survival(passenger):
+    passenger_df = pd.DataFrame([passenger])
+    passenger_df['Sex'] = passenger_df['Sex'].map({'male':0,'female':1})
+    for col in X.columns:
+        if col not in passenger_df.columns:
+            passenger_df[col]=0
+    prediction = model.predict(passenger_df)
+    return prediction[0]
+new_passenger={'Pclass':3, 'Sex':'female', 'Age': 22, 'SibSp': 1, 'Parch': 0, 'Fare': 7.25, 'Embarked_Q': 0, 'Embarked_S': 1}
+survived = predict_survival(new_passenger)
+print(f'The passenger {"survived" if survived else "did not survive"}')
