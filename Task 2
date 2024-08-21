@@ -1,0 +1,25 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+file_path = r"C:\Users\Harsha\Desktop\INTERN CODSOFT\movieratingdataset.csv"
+data = pd.read_csv(file_path, encoding='latin1')
+print("First few rows of the dataset:")
+print(data.head())
+print("\nDataset Info:")
+print(data.info())
+print("\nMissing values in the dataset:")
+print(data.isna().sum())
+data = data.fillna('')
+categorical_columns = ['Genre', 'Director', 'Actor 1', 'Actor 2', 'Actor 3']
+encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+encoded_features = encoder.fit_transform(data[categorical_columns])
+encoded_df = pd.DataFrame(encoded_features, columns=encoder.get_feature_names_out(categorical_columns))
+data_encoded = pd.concat([data.drop(categorical_columns, axis=1), encoded_df], axis=1)
+X = data_encoded.drop('Rating', axis=1)
+y = data_encoded['Rating']
+print(f"\nX shape: {X.shape}")
+print(f"y shape: {y.shape}")
+if X.shape[0] == 0 or y.shape[0] == 0:
+    raise ValueError("The dataset has become empty after preprocessing. Check the preprocessing steps.")
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
