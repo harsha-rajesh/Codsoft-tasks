@@ -1,0 +1,42 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+from imblearn.over_sampling import SMOTE
+import seaborn as sns
+import matplotlib.pyplot as plt
+file_path = r"C:\Users\Harsha\Desktop\INTERN CODSOFT\creditcard.csv"
+data = pd.read_csv(file_path)
+print("First few rows of the dataset:")
+print(data.head())
+print("\nDataset Info:")
+print(data.info())
+print("\nMissing values in the dataset:")
+print(data.isnull().sum())
+print("\nClass distribution:")
+print(data['Class'].value_counts())
+sns.countplot(x='Class', data=data)
+plt.title('Class Distribution')
+plt.show()
+scaler = StandardScaler()
+data['Amount'] = scaler.fit_transform(data['Amount'].values.reshape(-1, 1))
+X = data.drop(['Class', 'Time'], axis=1)
+y = data['Class']
+sm = SMOTE(random_state=42)
+X_res, y_res = sm.fit_resample(X, y)
+X_train, X_test, y_train, y_test = train_test_split(X_res, y_res, test_size=0.2, random_state=42)
+model = RandomForestClassifier(random_state=42)
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+print("\nModel Evaluation:")
+print(confusion_matrix(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+def predict_transaction(model, transaction):
+    transaction = scaler.transform(np.array(transaction).reshape(1, -1))
+    prediction = model.predict(transaction)
+    return "Fraudulent" if prediction[0] == 1 else "Genuine"
+new_transaction = [200, 0.2, 1.5, -1.2, 0.5, -0.4, 0.9, -1.0, 0.8, 0.6, -0.5, 1.1, 0.3, 0.2, -0.1, 0.7, -0.2, 1.3, 0.4, 0.1, -0.3, 0.5, -0.6, 0.2, -0.4, 0.1, 0.2, -0.1, 0.3]
+prediction = predict_transaction(model, new_transaction)
+print(f"\nPrediction for the new transaction: {prediction}")
